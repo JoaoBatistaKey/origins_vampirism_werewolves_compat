@@ -1,24 +1,28 @@
 ---
 name: workflow-approval
-description: "Mandatory workflow for all changes: requires prior approval report before executing any change, and a completion report after. Never switch from plan to build mode without explicit user permission. Use on every project interaction involving file modifications, builds, or game launches."
+description: "Fluxo obrigatorio para todas as alteracoes: exige relatorio de aprovacao antes de qualquer mudanca e relatorio de conclusao apos. Nunca alternar do modo plano para o modo construcao sem permissao explicita do usuario. Usar em toda interacao do projeto que envolva modificacoes de arquivos, builds, ou execucao do Minecraft."
 ---
 
-# Workflow & Approval Skill
+# Fluxo de Aprovacao (Workflow)
 
-## Rules
+## Regras
 
-1. **Plan vs Build** — Never switch from `plan` mode to `build` mode without asking for explicit user permission first.
+1. **Portugues Brasil** — Todas as explicacoes, relatorios e comunicacao devem ser em portugues brasil.
 
-2. **Pre-Change Report** — Before making any modification (editing files, writing new files, running builds, launching the game, or installing tools), generate a report explaining:
-   - What will be changed
-   - Why it needs to change
-   - A summary of the diff or new content
-   - Any risks or side effects
-   Then **ask for permission** before proceeding.
+2. **Modo Plano vs Modo Construcao** — Nunca alternar do modo `plano` para o modo `construcao` sem pedir permissao explicita do usuario primeiro.
 
-3. **Post-Change Report** — After each change is executed, generate a report of:
-   - What was actually done (files modified/created/deleted)
-   - The outcome (success, errors, warnings)
-   - Any follow-up steps needed
+3. **Relatorio Pre-Alteracao** — Antes de fazer qualquer modificacao (editar arquivos, escrever novos arquivos, executar builds, lancar o jogo, ou instalar ferramentas), gere um relatorio explicando:
+   - O que sera alterado
+   - Por que precisa ser alterado
+   - Um resumo do diff ou novo conteudo
+   - Riscos ou efeitos colaterais
+   - **Peca permissao** antes de prosseguir.
 
-4. **Scope** — These rules apply to all project interactions: editing source code, resource files, build scripts, configuration files, running gradle tasks, launching the game, or installing dependencies.
+4. **Relatorio de Conclusao** — Apos cada alteracao ser executada, gere um relatorio de:
+   - O que foi realmente feito (arquivos modificados/criados/deletados)
+   - O resultado (sucesso, erros, avisos)
+   - Proximos passos necessarios
+
+5. **Execucao do Minecraft** — SEMPRE pergunte ao usuario antes de iniciar o jogo (`runClient`). Nunca execute sem autorizacao.
+
+6. **Escopo** — Estas regras se aplicam a todas as interacoes do projeto: editar codigo fonte, arquivos de recursos, scripts de build, arquivos de configuracao, executar tarefas gradle, lancar o jogo, ou instalar dependencias.

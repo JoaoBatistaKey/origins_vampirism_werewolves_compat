@@ -16,6 +16,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import de.teamlapen.vampirism.api.VampirismAPI;
 import de.teamlapen.vampirism.api.entity.factions.IPlayableFaction;
 import de.teamlapen.vampirism.api.entity.factions.IFactionPlayerHandler;
+import de.teamlapen.vampirism.api.entity.player.vampire.IVampirePlayer;
 import de.teamlapen.vampirism.api.event.BloodDrinkEvent;
 import de.teamlapen.vampirism.api.event.PlayerFactionEvent;
 
@@ -61,25 +62,29 @@ public class InfectionEventHandler {
 
     @SubscribeEvent
     public static void onPlayerDrinkBlood(BloodDrinkEvent.PlayerDrinkBloodEvent event) {
+        System.out.println("[OriginsVampCompat] BloodDrinkEvent capturado!");
         try {
-            if (!(event.getVampire() instanceof Player vampirePlayer)) return;
-            if (vampirePlayer.level().isClientSide) return;
+            IVampirePlayer vp = (IVampirePlayer) event.getVampire();
+            Player vampirePlayer = vp.getRepresentingPlayer();
+            System.out.println("[OriginsVampCompat] Vampiro: " + (vampirePlayer != null ? vampirePlayer.getName().getString() : "null") + " / client: " + (vampirePlayer != null && vampirePlayer.level().isClientSide));
+            if (vampirePlayer == null || vampirePlayer.level().isClientSide) return;
 
             var bloodSource = event.getBloodSource().getEntity().orElse(null);
+            System.out.println("[OriginsVampCompat] Fonte do sangue: " + (bloodSource != null ? bloodSource.getName().getString() + " (" + bloodSource.getClass().getSimpleName() + ")" : "null"));
             if (!(bloodSource instanceof Player targetPlayer)) return;
 
             ResourceLocation targetOrigin = getPlayerOriginId(targetPlayer);
+            System.out.println("[OriginsVampCompat] Origem do alvo: " + targetOrigin);
             if (targetOrigin == null) return;
 
-            if (HUMAN_ORIGIN.equals(targetOrigin)) return;
-            if (HUNTER_ORIGIN.equals(targetOrigin)) return;
+            if (HUMAN_ORIGIN.equals(targetOrigin)) { System.out.println("[OriginsVampCompat] Humano, permitido"); return; }
+            if (HUNTER_ORIGIN.equals(targetOrigin)) { System.out.println("[OriginsVampCompat] Hunter, permitido"); return; }
 
             vampirePlayer.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1, false, true, true));
-            System.out.println("[OriginsVampCompat] Vampiro " + vampirePlayer.getName().getString()
-                + " levou wither por sugar sangue de " + targetPlayer.getName().getString()
-                + " (origem: " + targetOrigin + ")");
+            System.out.println("[OriginsVampCompat] WITHER APLICADO em " + vampirePlayer.getName().getString());
         } catch (Exception e) {
             System.out.println("[OriginsVampCompat] Erro em onPlayerDrinkBlood: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -116,12 +121,7 @@ public class InfectionEventHandler {
             UUID uuid = player.getUUID();
             ResourceLocation originId = getPlayerOriginId(player);
 
-            if (originId == null) {
-                System.out.println("[OriginsVampCompat] " + player.getName().getString() + " sem origem ainda");
-                return;
-            }
-
-            System.out.println("[OriginsVampCompat] Processando " + player.getName().getString() + " origem=" + originId);
+            if (originId == null) return;
 
             ResourceLocation previousOrigin = PLAYER_ORIGINS.get(uuid);
             if (previousOrigin != null && !previousOrigin.equals(originId)) {
@@ -163,7 +163,6 @@ public class InfectionEventHandler {
             if (HUMAN_ORIGIN.equals(originId)) return;
             if (EMPTY_ORIGIN.equals(originId)) return;
 
-            System.out.println("[OriginsVampCompat] Detectada origem protegida: " + originId + " - aplicando efeitos");
             applyProtectiveEffects(player);
 
         } catch (Exception e) {
@@ -175,13 +174,11 @@ public class InfectionEventHandler {
     private static ResourceLocation getPlayerOriginId(Player player) {
         IOriginContainer container = IOriginContainer.get(player).resolve().orElse(null);
         if (container == null) {
-            System.out.println("[OriginsVampCompat] IOriginContainer nao disponivel para " + player.getName().getString());
             return null;
         }
 
         var layers = OriginsAPI.getActiveLayers();
         if (layers == null || layers.isEmpty()) {
-            System.out.println("[OriginsVampCompat] Nenhuma layer ativa encontrada para " + player.getName().getString());
             return null;
         }
 
@@ -194,32 +191,41 @@ public class InfectionEventHandler {
             ResourceKey<?> originKey = container.getOrigin(layerKey);
             if (originKey == null) continue;
 
-            System.out.println("[OriginsVampCompat] " + player.getName().getString() + " origin=" + originKey.location() + " (layer " + mainLayerId + ")");
             return originKey.location();
         }
 
-        System.out.println("[OriginsVampCompat] Layer " + mainLayerId + " nao encontrada ou sem origin para " + player.getName().getString());
         return null;
     }
 
+    private static MobEffect cachedGarlic = null;
+    private static MobEffect cachedWolfsbane = null;
+    private static MobEffect cachedSanguinare = null;
+
     private static void applyProtectiveEffects(Player player) {
         try {
-            MobEffect garlic = ForgeRegistries.MOB_EFFECTS.getValue(
-                ResourceLocation.tryParse("vampirism:garlic"));
-            if (garlic != null) {
-                player.addEffect(new MobEffectInstance(garlic, 200, 0, false, true, true));
-                System.out.println("[OriginsVampCompat] Aplicado sangue de alho em " + player.getName().getString());
-            } else {
-                System.out.println("[OriginsVampCompat] Efeito vampirism:garlic nao encontrado!");
+            if (cachedGarlic == null) {
+                cachedGarlic = ForgeRegistries.MOB_EFFECTS.getValue(
+                    ResourceLocation.tryParse("vampirism:garlic"));
+            }
+            if (cachedGarlic != null) {
+                player.addEffect(new MobEffectInstance(cachedGarlic, 200, 0, false, true, true));
             }
 
-            MobEffect wolfsbane = ForgeRegistries.MOB_EFFECTS.getValue(
-                ResourceLocation.tryParse("werewolves:wolfsbane"));
-            if (wolfsbane != null) {
-                player.addEffect(new MobEffectInstance(wolfsbane, 200, 0, false, true, true));
-                System.out.println("[OriginsVampCompat] Aplicado wolfsbane em " + player.getName().getString());
-            } else {
-                System.out.println("[OriginsVampCompat] Efeito werewolves:wolfsbane nao encontrado!");
+            if (cachedWolfsbane == null) {
+                cachedWolfsbane = ForgeRegistries.MOB_EFFECTS.getValue(
+                    ResourceLocation.tryParse("werewolves:wolfsbane"));
+            }
+            if (cachedWolfsbane != null) {
+                player.addEffect(new MobEffectInstance(cachedWolfsbane, 200, 0, false, true, true));
+            }
+
+            if (cachedSanguinare == null) {
+                cachedSanguinare = ForgeRegistries.MOB_EFFECTS.getValue(
+                    ResourceLocation.tryParse("vampirism:sanguinare"));
+            }
+            if (cachedSanguinare != null && player.hasEffect(cachedSanguinare)) {
+                player.removeEffect(cachedSanguinare);
+                System.out.println("[OriginsVampCompat] Sanguinare removido de " + player.getName().getString());
             }
         } catch (Exception e) {
             System.out.println("[OriginsVampCompat] Erro ao aplicar efeitos protetivos: " + e.getMessage());
