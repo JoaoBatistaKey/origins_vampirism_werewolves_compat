@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "origins": [
+    "origins_vamp_compat:vampire",
+    "origins_vamp_compat:werewolf",
+    "origins_vamp_compat:hunter"
+  ]
+}

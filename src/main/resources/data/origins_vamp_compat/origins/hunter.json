@@ -1,0 +1,12 @@
+{
+  "powers": [
+    "origins_vamp_compat:set_hunter"
+  ],
+  "icon": {
+    "item": "vampirism:human_heart"
+  },
+  "order": 4,
+  "impact": 1,
+  "name": "origin.origins_vamp_compat.hunter.name",
+  "description": "A trained hunter of the night, specialized in eliminating vampires and werewolves. Still vulnerable to infection — be careful when facing the creatures you hunt."
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "skills": {
+    "paths": [".opencode/skills"]
+  },
+  "references": {
+    "forge-1.20.1-api": {
+      "path": ".opencode/skills/minecraft-modding/references/forge-1.20.1-api.md",
+      "description": "Use for Forge 1.20.1 API patterns, MDK workflow, registry, events, datagen, and server-data paths"
+    },
+    "common-patterns": {
+      "path": ".opencode/skills/minecraft-modding/references/common-patterns.md",
+      "description": "Use for blocks, items, recipes, commands, GUIs, datagen JSON templates"
+    }
+  }
+}
