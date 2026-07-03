@@ -3,7 +3,7 @@
     "origins_vamp_compat:set_werewolf"
   ],
   "icon": {
-    "item": "vampirism:injection_sanguinare"
+    "item": "origins_vamp_compat:werewolf_icon"
   },
   "order": 3,
   "impact": 3,

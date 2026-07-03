@@ -215,9 +215,6 @@ public class InfectionEventHandler {
             }
 
             if (HUMAN_ORIGIN.equals(originId)) {
-                if (Config.protectHumanRace()) {
-                    applyProtectiveEffects(player);
-                }
                 return;
             }
 
