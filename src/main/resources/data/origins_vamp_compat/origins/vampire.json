@@ -6,7 +6,7 @@
     "item": "vampirism:vampire_fang"
   },
   "order": 2,
-  "impact": 2,
+  "impact": 3,
   "name": "origin.origins_vamp_compat.vampire.name",
-  "description": "A creature of the night. Immune to vampirism and lycanthropy. Your vampire faction level is automatically set upon choosing this origin, granting access to vampire powers and progression."
+  "description": "origin.origins_vamp_compat.vampire.description"
 }

@@ -21,6 +21,7 @@ run
 # --- OpenCode AI (skills, node_modules, config) ---
 .opencode
 .agents
+opencode.json
 
 # --- Sensitive / personal files ---
 .env
