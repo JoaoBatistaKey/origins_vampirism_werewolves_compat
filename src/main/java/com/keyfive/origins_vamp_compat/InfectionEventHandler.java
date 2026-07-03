@@ -141,8 +141,8 @@ public class InfectionEventHandler {
 
             ResourceLocation previousOrigin = PLAYER_ORIGINS.get(uuid);
             if (previousOrigin != null && !previousOrigin.equals(originId)) {
-                System.out.println("[OriginsVampCompat] Origem mudou de " + previousOrigin + " para " + originId + " - removendo faccoes antigas");
-                removeFactionLevels(player);
+                System.out.println("[OriginsVampCompat] Origem mudou de " + previousOrigin + " para " + originId);
+                removeFactionForOrigin(player, previousOrigin);
                 FACTION_SET.put(uuid, false);
             }
             PLAYER_ORIGINS.put(uuid, originId);
@@ -282,29 +282,23 @@ public class InfectionEventHandler {
         }
     }
 
-    private static void removeFactionLevels(Player player) {
+    private static void removeFactionForOrigin(Player player, ResourceLocation originId) {
         try {
-            IFactionPlayerHandler handler = VampirismAPI.getFactionPlayerHandler(player)
-                .resolve().orElse(null);
-            if (handler == null) {
-                System.out.println("[OriginsVampCompat] Faction handler nao disponivel para " + player.getName().getString());
-                return;
+            String factionId = null;
+            if (VAMPIRE_ORIGIN.equals(originId)) {
+                factionId = "vampirism:vampire";
+            } else if (WEREWOLF_ORIGIN.equals(originId)) {
+                factionId = "werewolves:werewolf";
+            } else if (HUNTER_ORIGIN.equals(originId)) {
+                factionId = "vampirism:hunter";
             }
 
-            IPlayableFaction<?> vampire = (IPlayableFaction<?>)
-                VampirismAPI.factionRegistry().getFactionByID(ResourceLocation.tryParse("vampirism:vampire"));
-            IPlayableFaction<?> werewolf = (IPlayableFaction<?>)
-                VampirismAPI.factionRegistry().getFactionByID(ResourceLocation.tryParse("werewolves:werewolf"));
-            IPlayableFaction<?> hunter = (IPlayableFaction<?>)
-                VampirismAPI.factionRegistry().getFactionByID(ResourceLocation.tryParse("vampirism:hunter"));
+            if (factionId == null) return;
 
-            if (vampire != null) handler.setFactionLevel(vampire, 0);
-            if (werewolf != null) handler.setFactionLevel(werewolf, 0);
-            if (hunter != null) handler.setFactionLevel(hunter, 0);
-
-            System.out.println("[OriginsVampCompat] Removidos niveis de faccao para " + player.getName().getString());
+            setFactionLevel(player, factionId, 0);
+            System.out.println("[OriginsVampCompat] Removida faccao " + factionId + " para " + player.getName().getString());
         } catch (Exception e) {
-            System.out.println("[OriginsVampCompat] Erro ao remover faccoes: " + e.getMessage());
+            System.out.println("[OriginsVampCompat] Erro ao remover faccao: " + e.getMessage());
         }
     }
 }
