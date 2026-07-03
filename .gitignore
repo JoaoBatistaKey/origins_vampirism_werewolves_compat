@@ -1,29 +1,38 @@
-# eclipse
+# --- IDEs ---
 bin
 *.launch
 .settings
 .metadata
 .classpath
 .project
-
-# idea
 out
 *.ipr
 *.iws
 *.iml
 .idea
 
-# gradle
+# --- Gradle ---
 build
 .gradle
 
-# other
-eclipse
+# --- Minecraft dev runtime ---
 run
 
-# Files from Forge MDK
-forge*changelog.txt
-
-#Open Code 
+# --- OpenCode AI (skills, node_modules, config) ---
 .opencode
 .agents
+
+# --- Sensitive / personal files ---
+.env
+.env.*
+*.key
+*.pem
+*.cer
+*.pfx
+*.p12
+secrets/
+personal/
+
+# --- OS files ---
+Thumbs.db
+*.DS_Store
