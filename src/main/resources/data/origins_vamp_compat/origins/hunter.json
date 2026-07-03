@@ -3,7 +3,7 @@
     "origins_vamp_compat:set_hunter"
   ],
   "icon": {
-    "item": "vampirism:human_heart"
+    "item": "vampirism:crucifix_ultimate"
   },
   "order": 4,
   "impact": 2,

@@ -3,7 +3,7 @@
     "origins_vamp_compat:set_werewolf"
   ],
   "icon": {
-    "item": "werewolves:pelt"
+    "item": "vampirism:injection_sanguinare"
   },
   "order": 3,
   "impact": 3,
