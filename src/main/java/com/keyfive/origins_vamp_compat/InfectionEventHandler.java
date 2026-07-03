@@ -1,12 +1,15 @@
 package com.keyfive.origins_vamp_compat;
 
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -44,6 +47,9 @@ public class InfectionEventHandler {
         ResourceLocation.tryParse("origins:human");
     private static final ResourceLocation EMPTY_ORIGIN =
         ResourceLocation.tryParse("origins:empty");
+
+    private static final ResourceKey<DamageType> WEREWOLF_BITE =
+        ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.tryParse("werewolves:bite"));
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
@@ -96,16 +102,51 @@ public class InfectionEventHandler {
     }
 
     @SubscribeEvent
+    public static void onWerewolfBite(LivingHurtEvent event) {
+        try {
+            if (!event.getSource().is(WEREWOLF_BITE)) return;
+            if (!(event.getSource().getEntity() instanceof Player werewolfPlayer)) return;
+            if (!(event.getEntity() instanceof Player targetPlayer)) return;
+            if (targetPlayer.level().isClientSide) return;
+
+            ResourceLocation attackerOrigin = getPlayerOriginId(werewolfPlayer);
+            if (!WEREWOLF_ORIGIN.equals(attackerOrigin)) return;
+
+            ResourceLocation targetOrigin = getPlayerOriginId(targetPlayer);
+            if (targetOrigin == null) return;
+            if (VAMPIRE_ORIGIN.equals(targetOrigin)) return;
+            if (WEREWOLF_ORIGIN.equals(targetOrigin)) return;
+            if (HUNTER_ORIGIN.equals(targetOrigin)) return;
+            if (EMPTY_ORIGIN.equals(targetOrigin)) return;
+
+            if (HUMAN_ORIGIN.equals(targetOrigin)) {
+                if (Config.witherOnHumanDrink()) {
+                    werewolfPlayer.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1, false, true, true));
+                    System.out.println("[OriginsVampCompat] Wither aplicado em " + werewolfPlayer.getName().getString() + " por morder humano");
+                }
+                return;
+            }
+
+            if (Config.witherOnProtectedDrink()) {
+                werewolfPlayer.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1, false, true, true));
+                System.out.println("[OriginsVampCompat] Wither aplicado em " + werewolfPlayer.getName().getString() + " por morder raca protegida");
+            }
+        } catch (Exception e) {
+            System.out.println("[OriginsVampCompat] Erro em onWerewolfBite: " + e.getMessage());
+        }
+    }
+
+    @SubscribeEvent
     public static void onFactionChangePre(PlayerFactionEvent.FactionLevelChangePre event) {
         try {
             Player player = event.getPlayer().getPlayer();
             if (player == null || player.level().isClientSide) return;
 
-            IPlayableFaction<?> currentFaction = event.getPlayer().getCurrentFaction();
-            IPlayableFaction<?> newFaction = event.getCurrentFaction();
+            IPlayableFaction<?> currentFaction = event.getCurrentFaction();
+            IPlayableFaction<?> newFaction = event.getNewFaction();
 
-            if (currentFaction != null) return;
             if (newFaction == null) return;
+            if (currentFaction != null && currentFaction.equals(newFaction)) return;
 
             ResourceLocation originId = getPlayerOriginId(player);
             if (originId == null) return;
@@ -151,7 +192,6 @@ public class InfectionEventHandler {
 
             if (VAMPIRE_ORIGIN.equals(originId)) {
                 if (!factionSet) {
-                    System.out.println("[OriginsVampCompat] Detectado vampire, setando faction");
                     setFactionLevel(player, "vampirism:vampire", 5);
                     FACTION_SET.put(uuid, true);
                 }
@@ -160,7 +200,6 @@ public class InfectionEventHandler {
 
             if (WEREWOLF_ORIGIN.equals(originId)) {
                 if (!factionSet) {
-                    System.out.println("[OriginsVampCompat] Detectado werewolf, setando faction");
                     setFactionLevel(player, "werewolves:werewolf", 5);
                     FACTION_SET.put(uuid, true);
                 }
@@ -169,7 +208,6 @@ public class InfectionEventHandler {
 
             if (HUNTER_ORIGIN.equals(originId)) {
                 if (!factionSet) {
-                    System.out.println("[OriginsVampCompat] Detectado hunter, setando faction");
                     setFactionLevel(player, "vampirism:hunter", 5);
                     FACTION_SET.put(uuid, true);
                 }
@@ -189,7 +227,6 @@ public class InfectionEventHandler {
 
         } catch (Exception e) {
             System.out.println("[OriginsVampCompat] Erro processando " + player.getName().getString() + ": " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -270,13 +307,8 @@ public class InfectionEventHandler {
                 return;
             }
 
-            int currentLevel = handler.getCurrentLevel(faction);
-            if (currentLevel < level) {
-                handler.setFactionLevel(faction, level);
-                System.out.println("[OriginsVampCompat] Setado " + player.getName().getString() + " para " + factionId + " nivel " + level);
-            } else {
-                System.out.println("[OriginsVampCompat] " + player.getName().getString() + " ja tem " + factionId + " nivel " + currentLevel);
-            }
+            handler.setFactionAndLevel(faction, level);
+            System.out.println("[OriginsVampCompat] Setado " + player.getName().getString() + " para " + factionId + " nivel " + level);
         } catch (Exception e) {
             System.out.println("[OriginsVampCompat] Falha ao setar faction: " + e.getMessage());
         }
@@ -295,8 +327,19 @@ public class InfectionEventHandler {
 
             if (factionId == null) return;
 
-            setFactionLevel(player, factionId, 0);
-            System.out.println("[OriginsVampCompat] Removida faccao " + factionId + " para " + player.getName().getString());
+            IPlayableFaction<?> faction = (IPlayableFaction<?>)
+                VampirismAPI.factionRegistry().getFactionByID(ResourceLocation.tryParse(factionId));
+            if (faction == null) return;
+
+            IFactionPlayerHandler handler = VampirismAPI.getFactionPlayerHandler(player)
+                .resolve().orElse(null);
+            if (handler == null) return;
+
+            IPlayableFaction<?> currentFaction = handler.getCurrentFaction();
+            if (currentFaction != null && currentFaction.equals(faction)) {
+                handler.leaveFaction(true);
+                System.out.println("[OriginsVampCompat] Removida faccao " + factionId + " para " + player.getName().getString());
+            }
         } catch (Exception e) {
             System.out.println("[OriginsVampCompat] Erro ao remover faccao: " + e.getMessage());
         }
