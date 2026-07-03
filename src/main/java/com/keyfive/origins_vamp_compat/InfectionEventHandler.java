@@ -62,29 +62,36 @@ public class InfectionEventHandler {
 
     @SubscribeEvent
     public static void onPlayerDrinkBlood(BloodDrinkEvent.PlayerDrinkBloodEvent event) {
-        System.out.println("[OriginsVampCompat] BloodDrinkEvent capturado!");
         try {
             IVampirePlayer vp = (IVampirePlayer) event.getVampire();
             Player vampirePlayer = vp.getRepresentingPlayer();
-            System.out.println("[OriginsVampCompat] Vampiro: " + (vampirePlayer != null ? vampirePlayer.getName().getString() : "null") + " / client: " + (vampirePlayer != null && vampirePlayer.level().isClientSide));
             if (vampirePlayer == null || vampirePlayer.level().isClientSide) return;
 
             var bloodSource = event.getBloodSource().getEntity().orElse(null);
-            System.out.println("[OriginsVampCompat] Fonte do sangue: " + (bloodSource != null ? bloodSource.getName().getString() + " (" + bloodSource.getClass().getSimpleName() + ")" : "null"));
             if (!(bloodSource instanceof Player targetPlayer)) return;
 
             ResourceLocation targetOrigin = getPlayerOriginId(targetPlayer);
-            System.out.println("[OriginsVampCompat] Origem do alvo: " + targetOrigin);
             if (targetOrigin == null) return;
 
-            if (HUMAN_ORIGIN.equals(targetOrigin)) { System.out.println("[OriginsVampCompat] Humano, permitido"); return; }
-            if (HUNTER_ORIGIN.equals(targetOrigin)) { System.out.println("[OriginsVampCompat] Hunter, permitido"); return; }
+            if (VAMPIRE_ORIGIN.equals(targetOrigin)) return;
+            if (WEREWOLF_ORIGIN.equals(targetOrigin)) return;
+            if (HUNTER_ORIGIN.equals(targetOrigin)) return;
+            if (EMPTY_ORIGIN.equals(targetOrigin)) return;
 
-            vampirePlayer.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1, false, true, true));
-            System.out.println("[OriginsVampCompat] WITHER APLICADO em " + vampirePlayer.getName().getString());
+            if (HUMAN_ORIGIN.equals(targetOrigin)) {
+                if (Config.witherOnHumanDrink()) {
+                    vampirePlayer.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1, false, true, true));
+                    System.out.println("[OriginsVampCompat] Wither aplicado em " + vampirePlayer.getName().getString() + " por sugar sangue humano");
+                }
+                return;
+            }
+
+            if (Config.witherOnProtectedDrink()) {
+                vampirePlayer.addEffect(new MobEffectInstance(MobEffects.WITHER, 100, 1, false, true, true));
+                System.out.println("[OriginsVampCompat] Wither aplicado em " + vampirePlayer.getName().getString() + " por sugar sangue de raca protegida");
+            }
         } catch (Exception e) {
             System.out.println("[OriginsVampCompat] Erro em onPlayerDrinkBlood: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -106,11 +113,20 @@ public class InfectionEventHandler {
             if (VAMPIRE_ORIGIN.equals(originId)) return;
             if (WEREWOLF_ORIGIN.equals(originId)) return;
             if (HUNTER_ORIGIN.equals(originId)) return;
-            if (HUMAN_ORIGIN.equals(originId)) return;
             if (EMPTY_ORIGIN.equals(originId)) return;
 
-            event.setCanceled(true);
-            System.out.println("[OriginsVampCompat] Bloqueada infeccao para " + player.getName().getString() + " (origem: " + originId + ")");
+            if (HUMAN_ORIGIN.equals(originId)) {
+                if (Config.protectHumanRace()) {
+                    event.setCanceled(true);
+                    System.out.println("[OriginsVampCompat] Bloqueada infeccao para humano " + player.getName().getString());
+                }
+                return;
+            }
+
+            if (!Config.infectProtectedRaces()) {
+                event.setCanceled(true);
+                System.out.println("[OriginsVampCompat] Bloqueada infeccao para " + player.getName().getString() + " (origem: " + originId + ")");
+            }
         } catch (Exception e) {
             System.out.println("[OriginsVampCompat] Erro em onFactionChangePre: " + e.getMessage());
         }
@@ -160,7 +176,13 @@ public class InfectionEventHandler {
                 return;
             }
 
-            if (HUMAN_ORIGIN.equals(originId)) return;
+            if (HUMAN_ORIGIN.equals(originId)) {
+                if (Config.protectHumanRace()) {
+                    applyProtectiveEffects(player);
+                }
+                return;
+            }
+
             if (EMPTY_ORIGIN.equals(originId)) return;
 
             applyProtectiveEffects(player);
@@ -225,7 +247,6 @@ public class InfectionEventHandler {
             }
             if (cachedSanguinare != null && player.hasEffect(cachedSanguinare)) {
                 player.removeEffect(cachedSanguinare);
-                System.out.println("[OriginsVampCompat] Sanguinare removido de " + player.getName().getString());
             }
         } catch (Exception e) {
             System.out.println("[OriginsVampCompat] Erro ao aplicar efeitos protetivos: " + e.getMessage());
