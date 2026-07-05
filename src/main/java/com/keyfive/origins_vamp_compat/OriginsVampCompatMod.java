@@ -10,6 +10,5 @@ public class OriginsVampCompatMod {
 
     public OriginsVampCompatMod() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, Config.SERVER_SPEC, "origins_vamp_compat-server.toml");
-        ModItems.register();
     }
 }

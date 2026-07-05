@@ -1,9 +1,13 @@
 {
+  "condition": {
+    "type": "forge:mod_loaded",
+    "modid": "werewolves"
+  },
   "powers": [
     "origins_vamp_compat:set_werewolf"
   ],
   "icon": {
-    "item": "origins_vamp_compat:werewolf_icon"
+    "item": "werewolves:pelt"
   },
   "order": 3,
   "impact": 3,
